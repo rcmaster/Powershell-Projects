@@ -26,6 +26,8 @@
 #Variables#
 ###########
 
+$Status = null
+
 #Lower Level#
 $GC = $GC110, $GC109, $GC108
 $GC108 = "A12510W64078982.admin.cps.k12.il.us"
@@ -83,6 +85,13 @@ Function Test-3F
 {
 Test-Connection $3F
 }
+
+Get-GCStatus
+{$rtn = Test-Connection -CN $GC -Count 1 -BufferSize 16 -Quiet | foreach {
+  IF($rtn -match ‘True’) $status = Write-host "Online!"
+  
+  ELSE $ststus = Write-host "Offline :("{
+
 
 
 $inputXML = @"
@@ -183,12 +192,24 @@ write-host "Found the following interactable elements from our form" -Foreground
 get-variable WPF*
 }
  
-Get-FormVariables
+Get-FormVariables 
  
 #===========================================================================
 # post import functions
 #===========================================================================
  
+function Get-GCStatus {
+test-connection -cn ($gc) -count 1 -quiet | foreach {
+IF($_ -match 'True'){
+$Status = "Online!"
+Write-Host -ForegroundColor DarkGreen $Status}
+Else {
+$Status = "Offline"
+Write-host -ForegroundColor DarkRed $Status
+}
+}
+}    
+
 $WPFAnalyze.Add_Click({
 Test-GC | % {$WPFGC_Output.AddChild($_)}
 })
