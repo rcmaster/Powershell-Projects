@@ -86,13 +86,6 @@ Function Test-3F
 Test-Connection $3F
 }
 
-Get-GCStatus
-{$rtn = Test-Connection -CN $GC -Count 1 -BufferSize 16 -Quiet | foreach {
-  IF($rtn -match ‘True’) $status = Write-host "Online!"
-  
-  ELSE $ststus = Write-host "Offline :("{
-
-
 
 $inputXML = @"
 <Window x:Class="WpfApp4.MainWindow"
@@ -201,14 +194,50 @@ Get-FormVariables
 function Get-GCStatus {
 test-connection -cn ($gc) -count 1 -quiet | foreach {
 IF($_ -match 'True'){
-$Status = "Online!"
-Write-Host -ForegroundColor DarkGreen $Status}
+$Status = Write-Host -ForegroundColor DarkGreen "Online!"
+$Hostname = 
+$Room = 
+$lastReboot = 
+}
 Else {
-$Status = "Offline"
-Write-host -ForegroundColor DarkRed $Status
+$Status = Write-host -ForegroundColor DarkRed "Offline"
+$HostName = 
+$Room = 
 }
 }
-}    
+} 
+
+function Get-2FStatus {
+test-connection -cn ($2F) -count 1 -quiet | foreach {
+IF($_ -match 'True'){
+$Status = Write-Host -ForegroundColor DarkGreen "Online!"
+$Hostname = 
+$Room = 
+$lastReboot = 
+}
+Else {
+$Status = Write-host -ForegroundColor DarkRed "Offline"
+$HostName = 
+$Room = 
+}
+}
+} 
+
+function Get-3FStatus {
+test-connection -cn ($3F) -count 1 -quiet | foreach {
+IF($_ -match 'True'){
+$Status = Write-Host -ForegroundColor DarkGreen "Online!"
+$Hostname = 
+$Room = 
+$lastReboot = 
+}
+Else {
+$Status = Write-host -ForegroundColor DarkRed "Offline"
+$HostName = 
+$Room = 
+}
+}
+} 
 
 $WPFAnalyze.Add_Click({
 Test-GC | % {$WPFGC_Output.AddChild($_)}
