@@ -26,8 +26,6 @@
 #Variables#
 ###########
 
-$Status = null
-
 #Lower Level#
 $GC = $GC110, $GC109, $GC108
 $GC108 = "A12510W64078982.admin.cps.k12.il.us"
@@ -105,10 +103,10 @@ $inputXML = @"
                     <ListView x:Name="GC_Output" HorizontalAlignment="Left" Height="207" Margin="10,54,0,0" VerticalAlignment="Top" Width="471">
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Header="Room" Width="116"/>
-                                <GridViewColumn Header="Machine Name" Width="116"/>
-                                <GridViewColumn Header="Status" Width="116"/>
-                                <GridViewColumn Header="Last Reboot" Width="113"/>
+                                <GridViewColumn Header="Room" DisplayMemberBinding ="{Binding 'Room'}" Width="116"/>
+                                <GridViewColumn Header="Machine Name" DisplayMemberBinding ="{Machine Name'}" Width="116"/>
+                                <GridViewColumn Header="Status" DisplayMemberBinding ="{Binding 'Status'}" Width="116"/>
+                                <GridViewColumn Header="Last Reboot" DisplayMemberBinding ="{Binding 'Last boot'}" Width="113"/>
                             </GridView>
                         </ListView.View>
                         <ListBoxItem/>
@@ -160,7 +158,6 @@ $inputXML = @"
 
     </Grid>
 </Window>
-
 "@       
  
 $inputXML = $inputXML -replace 'mc:Ignorable="d"','' -replace "x:N",'N'  -replace '^<Win.*', '<Window'
@@ -191,53 +188,60 @@ Get-FormVariables
 # post import functions
 #===========================================================================
  
-function Get-GCStatus {
-test-connection -cn ($gc) -count 1 -quiet | foreach {
-IF($_ -match 'True'){
+function Test-GC {
+test-connection -cn $gc -count 1 | foreach {
+IF(-not $false){
+$Address = $_.IPV4Address
+$Hostname = Get-WmiObject -cn $address -class win32_computersystem | select -ExpandProperty name
 $Status = Write-Host -ForegroundColor DarkGreen "Online!"
-$Hostname = 
-$Room = 
-$lastReboot = 
+$lastboot = get-wmiobject -cn 10.61.1.202 -class win32_operatingsystem | %{ $_.ConvertToDateTime($_.LastBootUpTime) }
+@{Name='Machine Name';ex={"$Hostname"}},
+@{Name='Status';ex={"$status"}},
+@{Name='Last Boot';ex={"$lastboot"}},
 }
 Else {
 $Status = Write-host -ForegroundColor DarkRed "Offline"
-$HostName = 
-$Room = 
+$Status
 }
 }
-} 
+}
 
 function Get-2FStatus {
 test-connection -cn ($2F) -count 1 -quiet | foreach {
-IF($_ -match 'True'){
+IF(-not $false){
+$Address = $_.IPV4Address
+$Hostname = Get-WmiObject -cn $address -class win32_computersystem | select -ExpandProperty name
 $Status = Write-Host -ForegroundColor DarkGreen "Online!"
-$Hostname = 
-$Room = 
-$lastReboot = 
+$lastboot = get-wmiobject -cn $hostname -class win32_operatingsystem | %{ $_.ConvertToDateTime($_.LastBootUpTime) }
+$status
+@{Name='Machine Name';ex={"$Hostname"}}
+@{Name='Status';ex={"$status"}}
+@{Name='Last Boot';ex={"$lastboot"}}
 }
 Else {
 $Status = Write-host -ForegroundColor DarkRed "Offline"
-$HostName = 
-$Room = 
+$Status
 }
 }
-} 
+}
 
 function Get-3FStatus {
 test-connection -cn ($3F) -count 1 -quiet | foreach {
-IF($_ -match 'True'){
+IF(-not $false){
+$Address = $_.IPV4Address
+$Hostname = Get-WmiObject -class $address win32_computersystem | select -ExpandProperty name
 $Status = Write-Host -ForegroundColor DarkGreen "Online!"
-$Hostname = 
-$Room = 
-$lastReboot = 
+$lastboot = get-wmiobject -cn 10.61.1.202 -class win32_operatingsystem | %{ $_.ConvertToDateTime($_.LastBootUpTime) }
+@{Name='Machine Name';ex={"$Hostname"}}
+@{Name='Status';ex={"$status"}}
+@{Name='Last Boot';ex={"$lastboot"}}
 }
 Else {
 $Status = Write-host -ForegroundColor DarkRed "Offline"
-$HostName = 
-$Room = 
+$Status
 }
 }
-} 
+}
 
 $WPFAnalyze.Add_Click({
 Test-GC | % {$WPFGC_Output.AddChild($_)}
