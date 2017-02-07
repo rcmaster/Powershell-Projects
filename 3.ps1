@@ -174,7 +174,7 @@ Get-variable -name Status | select @{name='Value';ex={$_.Value}}
 
 
 $WPFAnalyze.Add_Click({
-Test-GC | select Name, Status, Lastbootuptime | % {$WPFGC_Output.AddChild($_)}
+Test-GC | select Name, Value, Lastbootuptime | % {$WPFGC_Output.AddChild($_)}
 })
 #===========================================================================
 # Shows the form
