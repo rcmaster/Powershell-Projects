@@ -156,25 +156,30 @@ Get-FormVariables
 # post import functions
 #===========================================================================
  
-function Test-GC {
-test-connection -cn $gc -count 1 | foreach {
-IF(-not $false){
-$Address = $_.IPV4Address
-Get-WmiObject -cn $address -class win32_computersystem | select @{name='Name';ex={$_.name}} 
-Get-WmiObject -cn $address -class win32_operatingsystem | select @{name='LastBootupTime';ex={%{ $_.ConvertToDateTime($_.LastBootUpTime) }}} 
-Set-Variable -name Status -value "Online!" 
-Get-variable -name Status | select @{name='Status';ex={$_.Value}}
-}
-Else {
-Set-Variable -name Status -value "Offline!"
-Get-variable -name Status | select @{name='Value';ex={$_.Value}}
-}
-}
-}
+function Test-GC { 
+     $gc | foreach {
+        
+        $connection = Test-Connection -cn $_ -count 1 -EA SilentlyContinue
+        $name     = $_
+        $online   = $null
+        $bootTime = $null
 
+        If ($connection) {
+            $Address  = $connection.IPV4Address
+            $name     = (Get-WmiObject -cn $address -class win32_computersystem).Name
+            $Status = "Online!"
+            $bootTime = (Get-WmiObject -cn $address -class win32_operatingsystem) | % { $_.ConvertToDateTime($_.LastBootUpTime) }
+        }
+        Else {
+             Set-Variable -name Status -value "Offline!" 
+             Get-variable -name Status | select @{name='Status';ex={$_.Value}}
+        }
+       return [pscustomobject]@{'Name'=$name;'Status'=$Status;'LastBootUpTime'=$bootTime}
+    }
+}
 
 $WPFAnalyze.Add_Click({
-Test-GC | select Name, Status, Lastbootuptime | % {$WPFGC_Output.AddChild($_)}
+Test-GC | % {$WPFGC_Output.AddChild($_)}
 })
 #===========================================================================
 # Shows the form
