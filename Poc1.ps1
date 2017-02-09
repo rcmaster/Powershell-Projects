@@ -9,10 +9,13 @@
 #########################
 
 ########Floor 2##########
+#2W105 - A12510W64092029#
 #2C107 - A12510W64091804#
 #2C108 - A12510W64091871#
-#2C110 - A12510W64091941#
+#2C110 - A12510W64081733#
 #2C111 - A12510W64094632#
+#2C112 - A13725W64081847#
+#2C113 - A12510W64091848#
 #########################
 
 ########Floor 3##########
@@ -33,11 +36,14 @@ $GC109 = "A12510W64091918.admin.cps.k12.il.us"
 $GC110 = "A12510W64091790.admin.cps.k12.il.us"
 
 #Floor 2#
-$2F = $2C107, $2C108, $2C110, $2C111
+$2F = $2W105, $2C107, $2C108, $2C110, $2C111, $2C112, $2C113
+$2W105 = "A12510W64092029.admin.cps.k12.il.us"
 $2C107 = "A12510W64091804.admin.cps.k12.il.us"
 $2C108 = "A12510W64091871.admin.cps.k12.il.us"
-$2C110 = "A12510W64091941.admin.cps.k12.il.us"
+$2C110 = "A12510W64081733.admin.cps.k12.il.us"
 $2C111 = "A12510W64094632.admin.cps.k12.il.us"
+$2C112 = "A13725W64081847.admin.cps.k12.il.us"
+$2C113 = "A12510W64091848.admin.cps.k12.il.us"
 
 #Floor 3#
 $3F = $3C102, $3C103, $3C106, $3C109
@@ -90,10 +96,9 @@ $inputXML = @"
                     <ListView x:Name="_2F_Output" HorizontalAlignment="Left" Height="207" Margin="10,54,0,0" VerticalAlignment="Top" Width="471">
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Header="Room" Width="116"/>
-                                <GridViewColumn Header="Machine Name" Width="116"/>
-                                <GridViewColumn Header="Status" Width="116"/>
-                                <GridViewColumn Header="Last Reboot" Width="113"/>
+                                <GridViewColumn Header="Machine Name" DisplayMemberBinding ="{Binding Name}" Width="116"/>
+                                <GridViewColumn Header="Status" DisplayMemberBinding ="{Binding Status}" Width="116"/>
+                                <GridViewColumn Header="Last Reboot" DisplayMemberBinding ="{Binding LastBootUpTime}" Width="113"/>
                             </GridView>
                         </ListView.View>
                         <ListBoxItem/>
@@ -109,10 +114,9 @@ $inputXML = @"
                     <ListView x:Name="_3F_Output1" HorizontalAlignment="Left" Height="207" Margin="10,54,0,0" VerticalAlignment="Top" Width="471">
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Header="Room" Width="116"/>
-                                <GridViewColumn Header="Machine Name" Width="116"/>
-                                <GridViewColumn Header="Status" Width="116"/>
-                                <GridViewColumn Header="Last Reboot" Width="113"/>
+                                <GridViewColumn Header="Machine Name" DisplayMemberBinding ="{Binding Name}" Width="116"/>
+                                <GridViewColumn Header="Status" DisplayMemberBinding ="{Binding Status}" Width="116"/>
+                                <GridViewColumn Header="Last Reboot" DisplayMemberBinding ="{Binding LastBootUpTime}" Width="113"/>
                             </GridView>
                         </ListView.View>
                         <ListBoxItem/>
@@ -158,6 +162,72 @@ Get-FormVariables
  
 function Test-GC { 
      $gc | foreach {
+
+        $connection = Test-Connection -cn $_ -count 1 -EA SilentlyContinue
+        $name     = $_
+        $online   = $null
+        $bootTime = $null
+
+        If ($connection) {
+            $Address = $connection.IPV4Address
+            Try {
+            $name = (Get-WmiObject -cn $address -erroraction Stop -class  win32_computersystem).Name
+            }
+            Catch
+            {
+            $name = "N/A: Error"
+            }
+            Try { 
+            $Status = "Online!"
+            $bootTime = (Get-WmiObject -cn $address -ErrorAction stop -class win32_operatingsystem) | % { $_.ConvertToDateTime($_.LastBootUpTime) }
+            }
+            Catch {
+            $boottime = "N/A: Error"
+                  }
+        }
+        Else {
+             Set-Variable -name Status -value "Offline!" 
+             Get-variable -name Status | select @{name='Status';ex={$_.Value}}
+        }
+       return [pscustomobject]@{'Name'=$name;'Status'=$Status;'LastBootUpTime'=$bootTime}
+    }
+}
+
+function Test-2F { 
+     $2F | foreach {
+
+        $connection = Test-Connection -cn $_ -count 1 -EA SilentlyContinue
+        $name     = $_
+        $online   = $null
+        $bootTime = $null
+
+        If ($connection) {
+            $Address = $connection.IPV4Address
+            Try {
+            $name = (Get-WmiObject -cn $address -erroraction Stop -class  win32_computersystem).Name
+            }
+            Catch
+            {
+            $name = "N/A: Error"
+            }
+            Try { 
+            $Status = "Online!"
+            $bootTime = (Get-WmiObject -cn $address -ErrorAction stop -class win32_operatingsystem) | % { $_.ConvertToDateTime($_.LastBootUpTime) }
+            }
+            Catch {
+            $boottime = "N/A: Error"
+                  }
+        }
+        Else {
+             Set-Variable -name Status -value "Offline!" 
+             Get-variable -name Status | select @{name='Status';ex={$_.Value}}
+        }
+       return [pscustomobject]@{'Name'=$name;'Status'=$Status;'LastBootUpTime'=$bootTime}
+    }
+}
+
+function Test-3F { 
+     $3F | foreach {
         
         $connection = Test-Connection -cn $_ -count 1 -EA SilentlyContinue
         $name     = $_
@@ -165,10 +235,22 @@ function Test-GC {
         $bootTime = $null
 
         If ($connection) {
-            $Address  = $connection.IPV4Address
-            $name     = (Get-WmiObject -cn $address -class win32_computersystem).Name
+            $Address = $connection.IPV4Address
+            Try {
+            $name = (Get-WmiObject -cn $address -erroraction Ignore -class  win32_computersystem).Name
+            }
+            Catch
+            {
+            $name = "N/A: Error"
+            }
+            Try { 
             $Status = "Online!"
-            $bootTime = (Get-WmiObject -cn $address -class win32_operatingsystem) | % { $_.ConvertToDateTime($_.LastBootUpTime) }
+
+            $bootTime = (Get-WmiObject -cn $address -ErrorAction ignore -class win32_operatingsystem) | % { $_.ConvertToDateTime($_.LastBootUpTime) }
+            }
+            Catch {
+            $boottime = "N/A: Error"
+                  }
         }
         Else {
              Set-Variable -name Status -value "Offline!" 
@@ -181,6 +263,16 @@ function Test-GC {
 $WPFAnalyze.Add_Click({
 Test-GC | % {$WPFGC_Output.AddChild($_)}
 })
+
+$WPFAnalyze_2F.Add_Click({
+Test-2F | % {$WPF_2F_Output.AddChild($_)}
+})
+
+$WPFAnalyze_3F.Add_Click({
+Test-3F | % {$WPF_3F_Output.AddChild($_)}
+})
+
+
 #===========================================================================
 # Shows the form
 #===========================================================================
